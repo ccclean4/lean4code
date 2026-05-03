@@ -2,58 +2,58 @@
 
 ## 數學原理
 
-### 群的定義
+### 皮亞諾算術系統
 
-群 $(G, \cdot, e, {}^{-1})$ 是配備二元運算 $\cdot$、單位元 $e$ 和逆元 ${}^{-1}$ 的集合，滿足：
+Lean 中的自然數 MyNat 是皮亞諾公理的實現：
 
-1. **結合律**：$(a \cdot b) \cdot c = a \cdot (b \cdot c)$
-2. **單位元**：$e \cdot a = a = a \cdot e$
-3. **逆元**：$a^{-1} \cdot a = e = a \cdot a^{-1}$
+```lean
+inductive MyNat : Type
+  | zero : MyNat
+  | succ : MyNat → MyNat
+```
 
-### 群的例子
+### 加法的定義
 
-| 群 | 運算 | 單位元 | 逆元 |
-|----|------|--------|------|
-| $(\mathbb{Z}, +)$ | 加法 | 0 | $-a$ |
-| $(\mathbb{Q} \setminus \{0\}, \times)$ | 乘法 | 1 | $1/a$ |
-| $S_n$（置換群） | 複合 | 恆等置換 | 逆置換 |
+$$a + 0 = a$$
+$$a + S(b) = S(a + b)$$
 
-### 基本性質
+```lean
+def add : MyNat → MyNat → MyNat
+  | a, zero => a
+  | a, succ b => succ (add a b)
+```
 
-1. **唯一性**：群中任何元素的逆元唯一
-2. **消去律**：若 $ab = ac$，則 $b = c$
-3. **阿貝爾群**：若還滿足交換律，則為阿貝爾群
+### 乘法的定義
 
-### 同態與同構
+$$a \times 0 = 0$$
+$$a \times S(b) = a \times b + a$$
 
-- **同態**：保持運算的映射 $f(ab) = f(a)f(b)$
-- **同構**：雙射的同態
+```lean
+def mul : MyNat → MyNat → MyNat
+  | _, zero => zero
+  | a, succ b => add (mul a b) a
+```
 
 ## 程式意義
 
-### 類別層級設計
+### 皮亞諾算術定理
 
 ```lean
-class Group (α : Type) extends Monoid α where
-  inv : α → α
-  inv_left : ∀ a, mul (inv a) a = one
-  inv_right : ∀ a, mul a (inv a) = one
+theorem addZero (n : MyNat) : add n zero = n := rfl
+theorem addSucc (n m : MyNat) : add n (succ m) = succ (add n m) := rfl
+theorem mulZero (n : MyNat) : mul n zero = zero := rfl
+theorem mulSucc (n m : MyNat) : mul n (succ m) = add (mul n m) n := rfl
 ```
 
-使用繼承建立類別層級：Magma → Semigroup → Monoid → Group。
-
-### 定理證明
+### 範例
 
 ```lean
-theorem group_cancel_left {α : Type} [Group α] (a b c : α)
-  (h : mul a b = mul a c) : b = c
+example : MyNat := MyNat.add MyNat.zero (MyNat.succ MyNat.zero)
 ```
 
-利用逆元進行消去，展現代數推理。
+## 教學重點
 
-### 形式化驗證的價值
-
-群論的形式化確保：
-1. 公理系統的無矛盾性
-2. 定理證明的機械化檢驗
-3. 抽象代數的計算機輔助研究
+1. 自然數的歸納定義
+2. 運算的遞迴定義
+3. 皮亞諾公理的機械化
+4. 基本算術定理的證明

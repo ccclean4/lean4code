@@ -4,14 +4,11 @@
 
 ### 函數作為一級公民
 
-在數學中，函數是集合之間的映射。在 Lean 4 中，函數也是值：
-
-$$\text{Type} \ni f : \alpha \to \beta$$
+在數學中，函數是集合之間的映射。在 Lean 4 中，函數也是值。
 
 ### 高階函數
 
 高階函數以其他函數為輸入或輸出：
-
 - `map : (α → β) → (List α → List β)`
 - `filter : (α → Bool) → (List α → List α)`
 - `fold : (β → α → β) → β → List α → β`
@@ -30,49 +27,65 @@ $$\alpha \times \beta \to \gamma \cong \alpha \to (\beta \to \gamma)$$
 
 ## 程式意義
 
-### map（映射）
+### 基本函數
 
 ```lean
 def double := fun x : Nat => x * 2
-#eval [1, 2, 3, 4, 5].map double  -- [2, 4, 6, 8, 10]
-```
 
-數學含義：對列表每個元素應用函數，產生新列表。
-
-### filter（過濾）
-
-```lean
 def isEven (n : Nat) : Bool := n % 2 == 0
-#eval [1, 2, 3, 4, 5].filter isEven  -- [2, 4]
-```
 
-數學含義：從集合中選擇滿足述詞的元素。
+def isOdd (n : Nat) : Bool := n % 2 == 1
+```
 
 ### fold（折疊）
 
 ```lean
 def sum (xs : List Nat) : Nat := xs.foldl (· + ·) 0
-```
 
-數學含義：廣義結合運算的迭代應用。
+def product (xs : List Nat) : Nat := xs.foldl (· * ·) 1
+```
 
 ### zipWith
 
 ```lean
-def zipWith {α β γ : Type} (f : α → β → γ) (xs : List α) (ys : List β) : List γ
+def zipWith {α β γ : Type} (f : α → β → γ) (xs : List α) (ys : List β) : List γ :=
+  match xs, ys with
+  | [], _ => []
+  | _, [] => []
+  | x :: xs', y :: ys' => f x y :: zipWith f xs' ys'
 ```
 
-數學含義：兩個列表的笛卡爾積在 f 下的像。
+### unzip
 
-## 範疇論視角
+```lean
+def unzip {α β : Type} (xys : List (α × β)) : List α × List β :=
+  xys.foldr (fun (x, y) (xs, ys) => (x :: xs, y :: ys)) ([], [])
+```
 
-這些高階函數對應範疇論中的重要概念：
+### compose
 
-| 函數 | 範疇論概念 |
-|------|-----------|
-| `map` | 函子（Functor） |
-| `fold` | 餘積（Catamorphism） |
-| `compose` | 合成（Composition） |
+```lean
+def compose (f : β → γ) (g : α → β) (x : α) : γ := f (g x)
+```
+
+### curry / uncurry
+
+```lean
+def curry (f : α × β → γ) (a : α) (b : β) : γ := f (a, b)
+
+def uncurry (f : α → β → γ) (ab : α × β) : γ := f ab.1 ab.2
+```
+
+## 範例
+
+```lean
+#eval [1, 2, 3, 4, 5].map double
+#eval [1, 2, 3, 4, 5].filter isEven
+#eval sum [1, 2, 3, 4, 5]
+#eval product [1, 2, 3, 4, 5]
+#eval zipWith (· + ·) [1, 2, 3] [10, 20, 30]
+#eval unzip [(1, 'a'), (2, 'b'), (3, 'c')]
+```
 
 ## 教學重點
 

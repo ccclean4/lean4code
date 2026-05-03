@@ -2,77 +2,65 @@
 
 ## 數學原理
 
-### 集中趨勢
+### 均值
 
-| 統計量 | 定義 |
-|--------|------|
-| 均值（Mean） | $\bar{x} = \frac{1}{n}\sum_{i=1}^n x_i$ |
-| 中位數（Median） | 排序後的中間值 |
-| 眾數（Mode） | 出現次數最多的值 |
+對列表 $xs = [x_1, x_2, \ldots, x_n]$，均值定義為：
 
-### 變異程度
+$$\bar{x} = \frac{1}{n}\sum_{i=1}^n x_i$$
 
-| 統計量 | 定義 |
-|--------|------|
-| 方差（Variance） | $\sigma^2 = \frac{1}{n}\sum(x_i - \bar{x})^2$ |
-| 標準差（Std Dev） | $\sigma = \sqrt{\sigma^2}$ |
-| 全距（Range） | $\max - \min$ |
-| 四分位距（IQR） | $Q_3 - Q_1$ |
+### 方差
 
-### 相關性
+$$\sigma^2 = \frac{1}{n}\sum_{i=1}^n (x_i - \bar{x})^2$$
 
-**共變異數**：
-$$\text{Cov}(X,Y) = \frac{1}{n}\sum(x_i - \bar{x})(y_i - \bar{y})$$
+### 標準差
 
-**相關係數**：
-$$\rho_{XY} = \frac{\text{Cov}(X,Y)}{\sigma_X \sigma_Y}$$
+$$\sigma = \sqrt{\sigma^2}$$
 
 ## 程式意義
 
-### 基本統計量
+### 均值
 
 ```lean
-def mean (xs : List Float) : Float :=
-  if xs.isEmpty then 0 else List.sum xs / xs.length.toFloat
-
-def median (xs : List Float) : Float := ...
-def variance (xs : List Float) : Float := ...
-def stdDev (xs : List Float) : Float := ...
+def mean (xs : List Float) : Float := xs.sum / xs.length.toFloat
 ```
 
-### 分位數
+### 方差
 
 ```lean
-def quartile (xs : List Float) (q : Float) : Float := ...
-def percentile (xs : List Float) (p : Float) : Float := ...
+def variance (xs : List Float) : Float := let m := mean xs; xs.foldl (fun acc x => acc + (x - m)^2) 0.0 / xs.length.toFloat
 ```
 
-### 標準化
+### 標準差
 
 ```lean
-def zScore (x : Float) (xs : List Float) : Float := do
-  let m := mean xs
-  let s := stdDev xs
-  if s > 0 then (x - m) / s else 0
-
-def standardize (xs : List Float) : List Float := ...
+def stdDev (xs : List Float) : Float := Float.sqrt (variance xs)
 ```
 
-Z-score 將資料標準化為均值為 0、標準差為 1 的分布。
-
-### 相關係數
+### 排序（未實現）
 
 ```lean
-def correlation (xs ys : List Float) : Float := do
-  let cov := covariance xs ys
-  let sx := stdDev xs
-  let sy := stdDev ys
-  if sx > 0 ∧ sy > 0 then cov / (sx * sy) else 0
+def sort (xs : List Float) : List Float := Id.run do
+  let rec swap (ys : List Float) (i j : Nat) : List Float := ys
+  xs
+```
+
+### 中位數（未實現）
+
+```lean
+def median (xs : List Float) : Float := 0.0
+```
+
+## 範例
+
+```lean
+#eval mean [1.0, 2.0, 3.0, 4.0, 5.0]
+#eval variance [1.0, 2.0, 3.0, 4.0, 5.0]
+#eval stdDev [1.0, 2.0, 3.0, 4.0, 5.0]
+
+example : Float := mean [1.0, 2.0, 3.0]
 ```
 
 ## 教學重點
 
-1. 描述統計與推論統計的區別
-2. 各種集中趨勢量數的適用場景
-3. 變異性量數的計算
-4. 相關係數的解釋
+1. 基本統計量的計算
+2. 方差與標準差的關係

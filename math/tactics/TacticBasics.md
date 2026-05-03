@@ -2,86 +2,59 @@
 
 ## 數學原理
 
-### 策略（ tactic ）的意義
+### 策略（tactic）的意義
 
-Tactic 是 Lean 4 證明引擎的核心概念。每個 tactic 代表一個推理步驟：
+Tactic 是 Lean 4 證明引擎的核心概念，但本檔案使用函數式風格撰寫證明。
 
-| Tactic | 數學含義 |
-|--------|----------|
-| `rfl` | 反射性：$t = t$ |
-| `exact h` | 直接應用：使用已知證據 |
-| `apply h` | 逆流應用：匹配目標 |
-| `intro` | 引入前提：$\to$ 規則 |
-
-### 自然演繹系統
-
-Lean 4 的 tactic 系統實現了自然演繹：
-
-$$\frac{}{\Gamma \vdash p \to p} \text{(假言推理)}$$
-
-```lean
-theorem simple (p : Prop) (hp : p) : p := by exact hp
-```
+每個定理代表一個推理步驟，等價於自然演繹系統中的一條規則。
 
 ## 程式意義
 
-### 基本 tactic
+### 基本定理
 
 ```lean
-theorem basic_refl : ∀ (n : Nat), n = n := by
-  intros n
-  rfl
+theorem ex1 (p : Prop) : p → p := fun hp => hp
 ```
 
-- `intros` 引入全稱量化的變數
-- `rfl` 證明目標是反射性的
-
-### 應用與逆流
+恆等函數，對應假言推理。
 
 ```lean
-theorem apply_example (p q r : Prop) (hp : p) (h : p → q) (h2 : q → r) : r := by
-  apply h2    -- 目標：r，從結論往前提
-  apply h     -- 目標：q
-  exact hp    -- 目標：p
+theorem ex2 (p q : Prop) : p ∧ q → p := fun h => h.left
 ```
 
-### 重寫戰略
-
-`rw` 使用等式進行代換：
+從合取提取左分量。
 
 ```lean
-theorem rw_example (a b c : Nat) (h1 : a = b) (h2 : b = c) : a = c := by
-  rw [h1, h2]  -- 依序應用等式
+theorem ex3 (p q : Prop) : p → p ∨ q := fun hp => Or.inl hp
 ```
 
-`←` 反向使用等式：
+從左側引入析取。
+
 ```lean
-theorem rw_symm (a b : Nat) (h : a = b) : b = a := by
-  rw [← h]
+theorem ex4 (p q r : Prop) : (p → q) → (q → r) → (p → r) := fun h1 h2 hp => h2 (h1 hp)
 ```
 
-### 模式匹配
+蘊含詞的傳遞性。
 
-`cases` 對歸納類型進行分支：
 ```lean
-theorem cases_example (n : Nat) : n = 0 ∨ n > 0 := by
-  cases n with
-  | zero => left; rfl
-  | succ n => right; exact Nat.succ_pos n
+theorem ex5 (p q : Prop) : p ∧ q → q ∧ p := fun h => And.intro h.right h.left
 ```
 
-### 結構化解構
+合取的交換律。
 
-`rcases` 使用模式解構複合值：
+## 範例
+
 ```lean
-theorem rcases_example {p q : Prop} (h : p ∧ q) : q ∧ p := by
-  rcases h with ⟨hp, hq⟩
-  constructor <;> assumption
+#check ex1
+#check ex2
+#check ex3
+#check ex4
+#check ex5
+
+example (p : Prop) : p → p := ex1 p
 ```
 
 ## 教學重點
 
-1. tactic 的組合使用
-2. `·` 語法開啟子目標
-3. `simp` 與 `rw` 的區別
-4. 結構化 tactic 寫法
+1. 定理作為函數
+2. 命題邏輯的基本推理規則

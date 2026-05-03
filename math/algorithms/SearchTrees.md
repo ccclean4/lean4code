@@ -10,9 +10,7 @@
 
 ### BST 的數學性質
 
-搜尋樹的中序遍歷產生有序序列：
-
-$$\text{inorder}(\text{BST}) = \text{sorted sequence}$$
+搜尋樹的中序遍歷產生有序序列。
 
 ### 高度與節點關係
 
@@ -26,49 +24,66 @@ $$\text{inorder}(\text{BST}) = \text{sorted sequence}$$
 
 ## 程式意義
 
-### BST 定義
+### BST 歸納類型
 
 ```lean
-inductive BST (α : Type) : Type
-  | empty : BST α
-  | node : α → BST α → BST α → BST α
-```
-
-### 搜索
-
-```lean
-def BST.contains [Ord α] : BST α → α → Bool
-  | .empty, _ => false
-  | .node v l r, x =>
-    match cmp x v with
-    | .lt => contains l x
-    | .eq => true
-    | .gt => contains r x
+inductive Tree (α : Type) where
+  | empty : Tree α
+  | node : α → Tree α → Tree α → Tree α
 ```
 
 ### 插入
 
 ```lean
-def BST.insert [Ord α] : α → BST α → BST α
-  | x, .empty => .node x .empty .empty
-  | x, (.node v l r) =>
-    match cmp x v with
-    | .lt => .node v (insert x l) r
-    | .eq => .node v l r
-    | .gt => .node v l (insert x r)
+def insert (cmp : α → α → Ordering) (x : α) : Tree α → Tree α
+  | empty => node x empty empty
+  | node v l r => match cmp x v with | .lt => node v (insert cmp x l) r | .gt => node v l (insert cmp x r) | .eq => node v l r
+```
+
+### 搜尋
+
+```lean
+def search (cmp : α → α → Ordering) (x : α) : Tree α → Bool
+  | empty => false
+  | node v l r => match cmp x v with | .lt => search cmp x l | .gt => search cmp x r | .eq => true
 ```
 
 ### 中序遍歷
 
 ```lean
-def BST.toList : BST α → List α
-  | .empty => []
-  | .node v l r => l.toList ++ [v] ++ r.toList
+def toList : Tree α → List α
+  | empty => []
+  | node v l r => toList l ++ [v] ++ toList r
+```
+
+### 高度
+
+```lean
+def height : Tree α → Nat
+  | empty => 0
+  | node _ l r => 1 + max (height l) (height r)
+```
+
+### 比較函數
+
+```lean
+def cmpInt (a b : Int) : Ordering := if a < b then .lt else if a > b then .gt else .eq
+```
+
+## 範例
+
+```lean
+#check Tree
+#check Tree.insert
+
+def cmpInt (a b : Int) : Ordering := if a < b then .lt else if a > b then .gt else .eq
+
+example : Tree Int := Tree.insert cmpInt 5 (Tree.insert cmpInt 3 (Tree.insert cmpInt 7 Tree.empty))
+example : Bool := Tree.search cmpInt 5 (Tree.insert cmpInt 5 Tree.empty)
 ```
 
 ## 教學重點
 
 1. BST 的遞迴定義
-2. 搜索與插入的邏輯
+2. 搜尋與插入的邏輯
 3. 中序遍歷的性質
-4. BST 性質的形式化證明

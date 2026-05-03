@@ -2,61 +2,55 @@
 
 ## 數學原理
 
-### 導數的定義
+### 導數的數值近似
 
-函數 $f$ 在點 $x$ 處可導：
+函數 $f$ 在點 $x$ 處的導數定義：
 
 $$f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}$$
 
-### 基本微分法則
+### 前向差分
 
-| 函數 | 導數 |
-|------|------|
-| $c$（常數） | $0$ |
-| $x^n$ | $nx^{n-1}$ |
-| $e^x$ | $e^x$ |
-| $\ln x$ | $\frac{1}{x}$ |
-| $\sin x$ | $\cos x$ |
-| $\cos x$ | $-\sin x$ |
+$$f'(x) \approx \frac{f(x + 0.001) - f(x)}{0.001}$$
 
-### 微分法則
+### 二階導數
 
-1. **和法則**：$(f + g)' = f' + g'$
-2. **積法則**：$(fg)' = f'g + fg'$
-3. **商法則**：$(\frac{f}{g})' = \frac{f'g - fg'}{g^2}$
-4. **鏈式法則**：$(f \circ g)' = (f' \circ g) \cdot g'$
+$$f''(x) \approx \frac{f(x + 0.001) - 2f(x) + f(x - 0.001)}{0.001^2}$$
 
 ## 程式意義
 
-### 可導性定義
+### 導數定義
 
 ```lean
-def DifferentiableAt (f : Float → Float) (x : Float) : Prop :=
-  ∃ L, ∀ ε > 0, ∃ δ > 0, ∀ h, 0 < abs h ∧ abs h < δ →
-    abs ((f (x + h) - f x) / h - L) < ε
+def deriv (f : Float → Float) (x : Float) : Float :=
+  (f (x + 0.001) - f x) / 0.001
 ```
 
-### 基本導數的證明
+### 二階導數
 
 ```lean
-theorem derivative_const (c : Float) (x : Float) : hasDerivative (fun _ => c) x 0
+def secondDeriv (f : Float → Float) (x : Float) : Float :=
+  (f (x + 0.001) - 2 * f x + f (x - 0.001)) / 0.000001
 ```
 
-常數函數的導數為零。
-
-### 和法則的證明
+### 導數的別名
 
 ```lean
-theorem derivative_sum (f g : Float → Float) (x : Float) (Lf Lg : Float)
-  (hf : hasDerivative f x Lf) (hg : hasDerivative g x Lg) :
-  hasDerivative (fun x => f x + g x) x (Lf + Lg)
+def d_dx (f : Float → Float) (x : Float) : Float := deriv f x
 ```
 
-利用極限的加法性質。
+## 範例
+
+```lean
+#eval deriv (fun x => x * x) 2.0
+#eval secondDeriv (fun x => x * x * x) 1.0
+#eval d_dx (fun x => Float.sin x) 0.0
+#eval d_dx (fun x => Float.exp x) 1.0
+
+example : Float := deriv (fun x => x * x * x) 1.0
+```
 
 ## 教學重點
 
-1. 導數的嚴格定義
-2. 基本函數導數的推導
-3. 微分法則的形式化
-4. 導數的幾何意義（切線斜率）
+1. 導數的數值近似方法
+2. 前向差分與中央差分
+3. 數值微分的實現

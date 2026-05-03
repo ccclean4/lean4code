@@ -2,73 +2,42 @@
 
 ## 數學原理
 
-### 機率空間
+### 期望值
 
-三元組 $(\Omega, \mathcal{F}, P)$：
-- $\Omega$：樣本空間
-- $\mathcal{F}$：事件域（$\Omega$ 的子集族）
-- $P$：機率測度
+對於離散隨機變數，期望值定義為：
 
-### 機率測度的性質
+$$E[X] = \sum_i p_i \cdot x_i$$
 
-1. **非負性**：$P(A) \geq 0$
-2. **正規化**：$P(\Omega) = 1$
-3. **可數可加性**：互斥事件的可數並的機率等於機率之和
+其中 $p_i$ 是權重（機率），$x_i$ 是值。
 
-### 條件機率
+### 加權平均
 
-$$P(A|B) = \frac{P(A \cap B)}{P(B)}$$
+給定分布權重和對應值，計算加權平均：
 
-### 貝葉斯定理
-
-$$P(A|B) = \frac{P(B|A)P(A)}{P(B)}$$
-
-### 常見分布
-
-| 分布 | 參數 | 均值 | 方差 |
-|------|------|------|------|
-| Bernoulli | $p$ | $p$ | $p(1-p)$ |
-| Binomial | $n, p$ | $np$ | $np(1-p)$ |
-| Poisson | $\lambda$ | $\lambda$ | $\lambda$ |
-
-### 極限定理
-
-- **大數定律**：樣本均值依概率收斂於期望值
-- **中央極限定理**：標準化和趨近於標準常態分布
+$$E[f(X)] = \sum_i \frac{w_i}{\sum w_j} \cdot f(x_i)$$
 
 ## 程式意義
 
-### ProbabilitySpace 結構
+### 期望值函數
 
 ```lean
-structure ProbabilitySpace where
-  space : Type
-  Pr : Event space → Float
-  nonempty : ∃ ω : space, True
-  measure_one : Pr (fun _ => True) = 1
-  countable_additivity : ...
+def expectation (f : Float → Float) (dist : List Float) : Float :=
+  let w := dist.map (· / dist.sum)
+  (w.zip dist).foldl (fun a (wi, xi) => a + wi * f xi) 0.0
 ```
 
-### 隨機變數
+1. 將分布轉換為機率權重
+2. 計算加權平均
+
+## 範例
 
 ```lean
-def RandomVariable (Ω : Type) (P : ProbabilitySpace) (α : Type) :=
-  Ω → α
-```
+#eval expectation id [0.1, 0.2, 0.3, 0.4]
 
-隨機變數是樣本空間到值空間的函數。
-
-### 期望值與變異數
-
-```lean
-def expectation {Ω : Type} {P : ProbabilitySpace} (X : RandomVariable Ω P Float) : Float
-
-def variance {Ω : Type} {P : ProbabilitySpace} (X : RandomVariable Ω P Float) : Float
+example : Float := expectation (fun x => x) [0.5, 0.5]
 ```
 
 ## 教學重點
 
-1. 機率論的公理化構造
-2. 條件機率與獨立性
-3. 貝葉斯推斷的基礎
-4. 大數定律與中央極限定理
+1. 期望值的數值計算
+2. 加權平均的實現

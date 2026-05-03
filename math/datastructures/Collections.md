@@ -2,76 +2,70 @@
 
 ## 數學原理
 
-### 佇列 (Queue)
+### 資料結構
 
-佇列是 FIFO（先進先出）資料結構，數學上是一個有限序列：
+本檔案展示三種基本資料結構：Stack（棧）、Queue（佇列）、Tree（元樹）。
 
-$$Q = \langle q_1, q_2, \ldots, q_n \rangle$$
+### 棧（Stack）
 
-操作：
-- `enqueue`：在末尾添加
-- `dequeue`：從頭部移除
+棧是 LIFO（後進先出）資料結構。
 
-### 棧 (Stack)
+### 佇列（Queue）
 
-棧是 LIFO（後進先出）資料結構：
+佇列是 FIFO（先進先出）資料結構。
 
-$$S = \langle s_1, s_2, \ldots, s_n \rangle \quad \text{其中 } s_n \text{ 是 top}$$
+### 樹（Tree）
 
-操作：
-- `push`：壓入
-- `pop`：彈出
-
-### 樹 (Tree)
-
-二元樹的遞迴定義：
-
-$$T ::= \text{leaf}(a) \mid \text{node}(T_1, T_2)$$
-
-對應數學中的根系結構。
+二元樹的遞迴定義。
 
 ## 程式意義
 
-### 佇列的雙棧實現
+### 棧
 
 ```lean
-inductive Queue (α : Type) where
-  | mk : List α → List α → Queue α
+inductive Stackα (α : Type) where | empty | push : α → Stackα α → Stackα α
+namespace Stackα
+def push' (s : Stackα α) (x : α) : Stackα α := push x s
+def pop : Stackα α → Option (α × Stackα α) | empty => none | push x r => some (x, r)
+def top : Stackα α → Option α | empty => none | push x _ => some x
+def isEmpty : Stackα α → Bool | empty => true | _ => false
+def size : Stackα α → Nat | empty => 0 | push _ s => 1 + size s
+end Stackα
 ```
 
-利用兩個棧模擬佇列：
-- `front`：出隊端的棧
-- `back`：入隊端的棧
-
-攤銷複雜度 $O(1)$。
-
-### 棧的函數式實現
+### 佇列
 
 ```lean
-inductive Stack (α : Type) where
-  | empty : Stack α
-  | push : α → Stack α → Stack α
+inductive Queueα (α : Type) where | empty | enq : α → Queueα α → Queueα α
+namespace Queueα
+def enq' (q : Queueα α) (x : α) : Queueα α := enq x q
+def front : Queueα α → Option α | empty => none | enq x _ => some x
+def isEmpty : Queueα α → Bool | empty => true | _ => false
+end Queueα
 ```
 
-完全函數式，無需可變狀態。
-
-### 樹的函數式操作
+### 樹
 
 ```lean
-def Tree.map (f : α → β) : Tree α → Tree β
-  | .leaf a => .leaf (f a)
-  | .node l r => .node (map f l) (map f r)
-
-def Tree.fold (f : α → β → β) (b : β) : Tree α → β
-  | .leaf a => f a b
-  | .node l r => fold f (fold f b r) l
+inductive Treeα (α : Type) where | leaf : α → Treeα α | node : Treeα α → Treeα α → Treeα α
+namespace Treeα
+def size : Treeα α → Nat | leaf _ => 1 | node l r => size l + size r
+def height : Treeα α → Nat | leaf _ => 0 | node l r => 1 + max (height l) (height r)
+def inorder : Treeα α → List α | leaf x => [x] | node l r => inorder l ++ inorder r
+end Treeα
 ```
 
-`fold` 對應數學中的路徑積分概念。
+## 範例
+
+```lean
+#check Stackα
+#eval Stackα.size (Stackα.push 1 (Stackα.push 2 Stackα.empty))
+#eval Treeα.size (Treeα.node (Treeα.leaf 1) (Treeα.leaf 2))
+
+example : Stackα Nat := Stackα.push 1 (Stackα.push 2 Stackα.empty)
+```
 
 ## 教學重點
 
 1. 代數資料類型（ADT）的設計
-2. 資料結構的慣用實現方式
-3. 函數式 vs 命令式實現
-4. fold 的普遍性
+2. 資料結構的基本操作
